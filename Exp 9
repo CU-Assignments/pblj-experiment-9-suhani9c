@@ -1,0 +1,92 @@
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+@Entity
+@Table(name = "students")
+class Student {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String name;
+    private int age;
+
+    public Student() {}
+    public Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+}
+
+public class Main {
+    private static final SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+
+    public static void createStudent(Student student) {
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+        session.save(student);
+        tx.commit();
+        session.close();
+    }
+
+    public static Student getStudent(int id) {
+        Session session = sessionFactory.openSession();
+        Student student = session.get(Student.class, id);
+        session.close();
+        return student;
+    }
+
+    public static void updateStudent(Student student) {
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+        session.update(student);
+        tx.commit();
+        session.close();
+    }
+
+    public static void deleteStudent(int id) {
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
+        Student student = session.get(Student.class, id);
+        if (student != null) {
+            session.delete(student);
+        }
+        tx.commit();
+        session.close();
+    }
+
+    public static List<Student> getAllStudents() {
+        Session session = sessionFactory.openSession();
+        List<Student> students = session.createQuery("from Student", Student.class).list();
+        session.close();
+        return students;
+    }
+
+    public static void main(String[] args) {
+        createStudent(new Student("Alice", 22));
+        createStudent(new Student("Bob", 24));
+
+        Student student = getStudent(1);
+        System.out.println("Retrieved: " + student.getName() + ", Age: " + student.getAge());
+
+        student.setAge(23);
+        updateStudent(student);
+
+        List<Student> allStudents = getAllStudents();
+        for (Student s : allStudents) {
+            System.out.println("Student: " + s.getId() + " - " + s.getName() + ", " + s.getAge());
+        }
+
+        deleteStudent(2);
+    }
+}
